@@ -11,8 +11,6 @@
 from tkinter import *
 from tkinter import messagebox
 
-from pprint import pprint
-
 # Create Window
 root = Tk()
 
