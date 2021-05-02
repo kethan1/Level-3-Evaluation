@@ -1,34 +1,79 @@
 import socket
 from tkinter import *
 
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+class Client:
+    def __init__(self, ip="127.0.0.1", port=5050, window_title="Server-Client Communication"):
+        self.ip = ip
+        self.port = port
+        # self.s.connect((ip, port))
+        self.root = Tk()
+        if window_title is not None:
+            self.root.title(window_title)
+        
+    def get_random_numbers(self):
+        self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.connect((self.ip, self.port))
+        self.s.send("GET /random_numbers HTTP/1.1".encode())
+        http_code, random_numbers = self.s.recv(1024).decode().split(" | ")
+        random_numbers = list(map(int, random_numbers.split()))    
+        self.random_numbers = random_numbers
+        self.s.close()
+        return self.random_numbers
 
-s.connect(("127.0.0.1", 5050))
+    def sort(self, list):
+        copyList = list.copy()
+        if len(list) != 1:
+            middle = len(copyList)//2
+            left = copyList[:middle]
+            right = copyList[middle:]
 
-root = Tk()
-root.title("Random Numbers")
+            mergeSortLeft = self.sort(left)
+            mergeSortRight = self.sort(right)
 
-def random_numbers():
-    print(2)
-    s.send("GET /random_numbers HTTP/1.1".encode())
-    print(3)
-    http_code = s.recv(1024).decode()
-    print(4)
-    random_numbers = s.recv(1024).decode()
-    print(5)
-    random_numbers = random_numbers.split()
-    print(6)
-    print(random_numbers)
+            current, currentLeft, currentRight = 0, 0, 0
 
-# while True:
-#     to_send = input("Enter text, q to quit: ")
-#     s.send(to_send.encode())
-#     if to_send == "q":
-#         break
-#     root.update()
-print(1)
-random_numbers()
-print(7)
-s.close()
+            while currentLeft < len(mergeSortLeft) and currentRight < len(mergeSortRight):
+                if mergeSortLeft[currentLeft] < mergeSortRight[currentRight]:
+                    copyList[current] = mergeSortLeft[currentLeft]
+                    currentLeft+=1
+                else:
+                    copyList[current] = mergeSortRight[currentRight]
+                    currentRight+=1
+                current+=1
 
-root.mainloop()
+            while currentLeft < len(mergeSortLeft):
+                copyList[current] = mergeSortLeft[currentLeft]
+                currentLeft+=1
+                current+=1
+
+            while currentRight < len(mergeSortRight):
+                copyList[current] = mergeSortRight[currentRight]
+                currentRight+=1
+                current+=1
+
+        return copyList
+
+    def UI_setup(self):
+        self.display_random_numbers()
+        new_numbers = Button(self.root, text="New Numbers", command=self.display_random_numbers)
+        sort_button = Button(self.root, text="Sort Numbers", command=self.display_sorted_numbers)
+        new_numbers.grid(row=1, column=3)
+        sort_button.grid(row=1, column=6)
+
+    def display_random_numbers(self):
+        for index, random_number in enumerate(self.get_random_numbers()):
+            label = Label(self.root, text=random_number, font=["Arial", 12])
+            label.grid(row=0, column=index, padx=20)
+
+    def display_sorted_numbers(self):
+        for index, random_number in enumerate(self.sort(self.random_numbers)):
+            label = Label(self.root, text=random_number, font=["Arial", 12])
+            label.grid(row=0, column=index, padx=20)
+
+    def UI_listen(self):
+        self.root.mainloop()
+
+client1 = Client(ip=input("Enter IP: "))
+
+client1.UI_setup()
+client1.UI_listen()
