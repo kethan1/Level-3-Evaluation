@@ -1,15 +1,25 @@
 import socket
+from sqlite3_class import SQLite3_Class 
 from tkinter import *
+import datetime
+import os
+
+"homework, output numbers to database (with timestamp)"
 
 class Client:
     def __init__(self, ip="127.0.0.1", port=5050, window_title="Server-Client Communication"):
         self.ip = ip
         self.port = port
-        # self.s.connect((ip, port))
         self.root = Tk()
         if window_title is not None:
             self.root.title(window_title)
-        
+        os.remove("numbers_database.db")
+        self.database = SQLite3_Class("numbers_database.db")
+        self.database.custom_execute_command("CREATE TABLE IF NOT EXISTS numbers_table (numbers TEXT, date TEXT)", output=False)
+
+    def return_time_formatted(self):
+        return datetime.datetime.now().strftime("%Y-%m-%d %I:%M:%S")
+
     def get_random_numbers(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((self.ip, self.port))
@@ -61,19 +71,31 @@ class Client:
         sort_button.grid(row=1, column=6)
 
     def display_random_numbers(self):
-        for index, random_number in enumerate(self.get_random_numbers()):
+        self.get_random_numbers()
+        self.database.insert("numbers_table", (' '.join(str(element) for element in self.random_numbers), self.return_time_formatted()))
+        for index, random_number in enumerate(self.random_numbers):
             label = Label(self.root, text=random_number, font=["Arial", 12])
             label.grid(row=0, column=index, padx=20)
+            
 
     def display_sorted_numbers(self):
-        for index, random_number in enumerate(self.sort(self.random_numbers)):
+        sorted_numbers = self.sort(self.random_numbers)
+        self.database.update_specific("numbers_table", {"numbers": ' '.join(str(element) for element in sorted_numbers)}, f"numbers='{' '.join(str(element) for element in self.random_numbers)}'")
+        self.random_numbers = sorted_numbers
+        for index, random_number in enumerate(self.random_numbers):
             label = Label(self.root, text=random_number, font=["Arial", 12])
             label.grid(row=0, column=index, padx=20)
 
     def UI_listen(self):
         self.root.mainloop()
 
+    def close(self):
+        self.database.commit()
+        self.database.close()
+
 client1 = Client(ip=input("Enter IP: "))
 
 client1.UI_setup()
 client1.UI_listen()
+
+client1.close()

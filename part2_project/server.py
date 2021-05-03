@@ -52,10 +52,7 @@ server1.start_listen_for_users()
 
 try:
     while True:
-        if server1.users == []:
-            time.sleep(180)
-            if server1.users == []:
-                break
+        time.sleep(1)
 except KeyboardInterrupt:
     pass
 
