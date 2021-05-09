@@ -212,7 +212,6 @@ class SQLite3_Class:
                 change_final.append(f"{key}='{value}'")
             else:
                 change_final.append(f"{key}={value}")
-        print(change_final)
         sqlite3_connection = self.sqlite3_database.cursor()
         query_with_where = ""
         if query != "":

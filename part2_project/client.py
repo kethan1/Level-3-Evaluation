@@ -80,7 +80,9 @@ class Client:
 
     def display_sorted_numbers(self):
         sorted_numbers = self.sort(self.random_numbers)
-        self.database.update_specific("numbers_table", {"numbers": ' '.join(str(element) for element in sorted_numbers)}, f"numbers='{' '.join(str(element) for element in self.random_numbers)}'")
+        print("Updating, Previous Contents: ")
+        print(self.database.select_specific(table_name = "numbers_table", query=f"numbers='{' '.join(str(element) for element in self.random_numbers)}'"))
+        self.database.update_specific("numbers_table", {"numbers": ' '.join(str(element) for element in sorted_numbers), "date": self.return_time_formatted()}, f"numbers='{' '.join(str(element) for element in self.random_numbers)}'")
         self.random_numbers = sorted_numbers
         for index, random_number in enumerate(self.random_numbers):
             label = Label(self.root, text=random_number, font=["Arial", 12])
